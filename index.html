@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Cuadernos PDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --bg: #1a1a2e;
+            --bg-secondary: #16213e;
+            --accent: #0f3460;
+            --text: #e8e8e8;
+            --text-muted: #a0a0a0;
+            --success: #4ecca3;
+            --border: #2a2a4a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        header p {
+            color: var(--text-muted);
+        }
+
+        .panels {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        @media (max-width: 700px) {
+            .panels {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .panel h2 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group:last-child {
+            margin-bottom: 0;
+        }
+
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.3rem;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 0.6rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            color: var(--text);
+            font-size: 0.95rem;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: var(--success);
+        }
+
+        .description {
+            background: var(--accent);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            min-height: 60px;
+        }
+
+        .description h3 {
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .description p {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        button {
+            padding: 0.8rem 2rem;
+            font-size: 1rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: transform 0.1s, opacity 0.1s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        .btn-primary {
+            background: var(--success);
+            color: var(--bg);
+        }
+
+        .btn-secondary {
+            background: var(--border);
+            color: var(--text);
+        }
+
+        .preview-info {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Generador de Cuadernos PDF</h1>
+            <p>Encuadernacion artesanal espanola</p>
+        </header>
+
+        <div class="panels">
+            <div class="panel">
+                <h2>Pagina</h2>
+
+                <div class="form-group">
+                    <label for="page_size">Tamano de pagina</label>
+                    <select id="page_size" onchange="updateDescription(this)">
+                        <option value="a5" data-desc="El mas popular para cuadernos artesanales. Tamano compacto ideal para llevar.">A5 (148x210mm)</option>
+                        <option value="a4" data-desc="Tamano estandar de folio. Ideal para cuadernos de escritorio.">A4 (210x297mm)</option>
+                        <option value="a6" data-desc="Tamano bolsillo. Perfecto para libretas de notas rapidas.">A6 (105x148mm)</option>
+                        <option value="b5" data-desc="Intermedio entre A4 y A5. Popular en Japon y Corea.">B5 (176x250mm)</option>
+                        <option value="letter" data-desc="Estandar estadounidense. Similar al A4.">Letter (216x279mm)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="orientation">Orientacion</label>
+                    <select id="orientation" onchange="updateDescription(this)">
+                        <option value="portrait" data-desc="Orientacion clasica de cuaderno. La mas comun para escritura.">Vertical (Portrait)</option>
+                        <option value="landscape" data-desc="Orientacion apaisada. Ideal para dibujo y storyboards.">Horizontal (Landscape)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="pages">Numero de paginas</label>
+                    <select id="pages" onchange="updateDescription(this)">
+                        <option value="8" data-desc="Cuadernillo simple. Un solo pliego A4 doblado.">8 paginas</option>
+                        <option value="16" data-desc="Dos pliegos. Libreta pequena.">16 paginas</option>
+                        <option value="32" selected data-desc="Estandar para cuadernillos. Signature comun.">32 paginas</option>
+                        <option value="48" data-desc="Tres signatures. Cuaderno mediano.">48 paginas</option>
+                        <option value="64" data-desc="Cuatro signatures. Cuaderno completo.">64 paginas</option>
+                        <option value="96" data-desc="Seis signatures. Cuaderno grueso.">96 paginas</option>
+                        <option value="128" data-desc="Ocho signatures. Diario o journal.">128 paginas</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="pages_per_sheet">Paginas por hoja</label>
+                    <select id="pages_per_sheet" onchange="updateDescription(this)">
+                        <option value="1" data-desc="Una pagina por hoja. Sin imposicion.">1 pagina/hoja</option>
+                        <option value="2" data-desc="Dos paginas lado a lado. Para doblar por la mitad.">2 paginas/hoja</option>
+                        <option value="4" data-desc="Imposicion para cuadernillo. Saddle-stitch.">4 paginas/hoja</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Patron</h2>
+
+                <div class="form-group">
+                    <label for="pattern">Tipo de patron</label>
+                    <select id="pattern" onchange="updateDescription(this)">
+                        <option value="squared" data-desc="Patron de cuadrados. El mas versatil, muy popular en Espana.">Cuadricula</option>
+                        <option value="lined" data-desc="Lineas horizontales para escritura. Pauta tradicional espanola.">Lineas</option>
+                        <option value="dotted" data-desc="Rejilla de puntos. Popular para bullet journal y lettering.">Puntos</option>
+                        <option value="blank" data-desc="Sin patron. Para dibujo libre y bocetos.">En blanco</option>
+                        <option value="cornell" data-desc="Metodo de notas Cornell. Con columna de conceptos y resumen.">Cornell</option>
+                        <option value="isometric" data-desc="Rejilla isometrica a 30 grados. Para dibujo tecnico y 3D.">Isometrico</option>
+                        <option value="hexagonal" data-desc="Patron de hexagonos. Para quimica y diseno de juegos.">Hexagonal</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="spacing">Espaciado (mm)</label>
+                    <select id="spacing" onchange="updateDescription(this)">
+                        <option value="4" data-desc="Espaciado fino. Ideal para letra pequena o calculos.">4 mm</option>
+                        <option value="5" selected data-desc="Estandar espanol para cuadricula. El mas comun.">5 mm</option>
+                        <option value="6" data-desc="Espaciado medio. Bueno para escritura normal.">6 mm</option>
+                        <option value="7" data-desc="Espaciado amplio. Comodo para notas rapidas.">7 mm</option>
+                        <option value="8" data-desc="Pauta espanola estandar para lineas. Tradicional.">8 mm</option>
+                        <option value="10" data-desc="Espaciado muy amplio. Para caligrafia o letra grande.">10 mm</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="line_gray">Color de linea</label>
+                    <select id="line_gray" onchange="updateDescription(this)">
+                        <option value="50" data-desc="Lineas bien visibles. Para uso con lapiz.">50% - Gris medio</option>
+                        <option value="65" data-desc="Buen contraste. Visibles pero no dominantes.">65% - Gris claro</option>
+                        <option value="75" selected data-desc="Estandar espanol. Discretas pero visibles.">75% - Gris suave</option>
+                        <option value="85" data-desc="Muy sutiles. Las lineas no compiten con la escritura.">85% - Gris muy claro</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="line_weight">Grosor de linea</label>
+                    <select id="line_weight" onchange="updateDescription(this)">
+                        <option value="0.2" data-desc="Lineas muy delicadas. Para papel de alta calidad.">0.2 pt - Ultrafino</option>
+                        <option value="0.3" selected data-desc="Estandar para cuadernos de calidad.">0.3 pt - Fino</option>
+                        <option value="0.4" data-desc="Grosor medio. Buena visibilidad.">0.4 pt - Normal</option>
+                        <option value="0.5" data-desc="Lineas mas marcadas. Para patrones grandes.">0.5 pt - Grueso</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="panels">
+            <div class="panel">
+                <h2>Margenes (mm)</h2>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                    <div class="form-group">
+                        <label for="margin_top">Superior</label>
+                        <select id="margin_top">
+                            <option value="5">5 mm</option>
+                            <option value="10" selected>10 mm</option>
+                            <option value="15">15 mm</option>
+                            <option value="20">20 mm</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="margin_bottom">Inferior</label>
+                        <select id="margin_bottom">
+                            <option value="5">5 mm</option>
+                            <option value="10" selected>10 mm</option>
+                            <option value="15">15 mm</option>
+                            <option value="20">20 mm</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="margin_left">Izquierdo</label>
+                        <select id="margin_left">
+                            <option value="5">5 mm</option>
+                            <option value="10">10 mm</option>
+                            <option value="15" selected>15 mm</option>
+                            <option value="20">20 mm</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="margin_right">Derecho</label>
+                        <select id="margin_right">
+                            <option value="5">5 mm</option>
+                            <option value="10" selected>10 mm</option>
+                            <option value="15">15 mm</option>
+                            <option value="20">20 mm</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2>Opciones adicionales</h2>
+                <div class="form-group">
+                    <label for="header_line">Linea de encabezado</label>
+                    <select id="header_line">
+                        <option value="no">Sin encabezado</option>
+                        <option value="yes">Con encabezado</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="page_numbers">Numeros de pagina</label>
+                    <select id="page_numbers">
+                        <option value="no">Sin numerar</option>
+                        <option value="yes">Numeradas</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="description" id="description-panel">
+            <h3>Cuadricula</h3>
+            <p>Patron de cuadrados. El mas versatil, muy popular en Espana.</p>
+        </div>
+
+        <div class="actions">
+            <button class="btn-primary" onclick="generatePDF()">Generar PDF</button>
+            <button class="btn-secondary" onclick="resetDefaults()">Restablecer</button>
+        </div>
+
+        <p class="preview-info">El PDF se descargara automaticamente</p>
+    </div>
+
+    <script>
+        const { jsPDF } = window.jspdf;
+
+        // Page sizes in mm
+        const PAGE_SIZES = {
+            a4: [210, 297],
+            a5: [148, 210],
+            a6: [105, 148],
+            b5: [176, 250],
+            letter: [216, 279]
+        };
+
+        function getConfig() {
+            return {
+                page_size: document.getElementById('page_size').value,
+                orientation: document.getElementById('orientation').value,
+                pattern: document.getElementById('pattern').value,
+                spacing: parseFloat(document.getElementById('spacing').value),
+                margin_top: parseFloat(document.getElementById('margin_top').value),
+                margin_bottom: parseFloat(document.getElementById('margin_bottom').value),
+                margin_left: parseFloat(document.getElementById('margin_left').value),
+                margin_right: parseFloat(document.getElementById('margin_right').value),
+                line_gray: parseInt(document.getElementById('line_gray').value),
+                line_weight: parseFloat(document.getElementById('line_weight').value),
+                pages: parseInt(document.getElementById('pages').value),
+                pages_per_sheet: parseInt(document.getElementById('pages_per_sheet').value),
+                header_line: document.getElementById('header_line').value,
+                page_numbers: document.getElementById('page_numbers').value
+            };
+        }
+
+        function updateDescription(selectElement) {
+            const option = selectElement.options[selectElement.selectedIndex];
+            const desc = option.dataset.desc;
+            if (desc) {
+                const panel = document.getElementById('description-panel');
+                panel.innerHTML = `<h3>${option.text}</h3><p>${desc}</p>`;
+            }
+        }
+
+        function resetDefaults() {
+            document.getElementById('page_size').value = 'a5';
+            document.getElementById('orientation').value = 'portrait';
+            document.getElementById('pattern').value = 'squared';
+            document.getElementById('spacing').value = '5';
+            document.getElementById('margin_top').value = '10';
+            document.getElementById('margin_bottom').value = '10';
+            document.getElementById('margin_left').value = '15';
+            document.getElementById('margin_right').value = '10';
+            document.getElementById('line_gray').value = '75';
+            document.getElementById('line_weight').value = '0.3';
+            document.getElementById('pages').value = '32';
+            document.getElementById('pages_per_sheet').value = '1';
+            document.getElementById('header_line').value = 'no';
+            document.getElementById('page_numbers').value = 'no';
+        }
+
+        function getGrayColor(percent) {
+            const val = Math.round(255 * percent / 100);
+            return [val, val, val];
+        }
+
+        function drawLined(doc, x, y, width, height, config) {
+            const spacing = config.spacing;
+            const mt = config.margin_top;
+            const mb = config.margin_bottom;
+            const ml = config.margin_left;
+            const mr = config.margin_right;
+
+            doc.setDrawColor(...getGrayColor(config.line_gray));
+            doc.setLineWidth(config.line_weight * 0.352778); // pt to mm
+
+            let startY = y + mt + spacing;
+            if (config.header_line === 'yes') {
+                doc.setLineWidth(config.line_weight * 0.352778 * 1.5);
+                doc.line(x + ml, y + mt, x + width - mr, y + mt);
+                doc.setLineWidth(config.line_weight * 0.352778);
+                startY = y + mt + spacing * 2;
+            }
+
+            let lineY = startY;
+            while (lineY < y + height - mb) {
+                doc.line(x + ml, lineY, x + width - mr, lineY);
+                lineY += spacing;
+            }
+        }
+
+        function drawDotted(doc, x, y, width, height, config) {
+            const spacing = config.spacing;
+            const mt = config.margin_top;
+            const mb = config.margin_bottom;
+            const ml = config.margin_left;
+            const mr = config.margin_right;
+            const dotRadius = config.line_weight * 0.352778 * 0.6;
+
+            doc.setFillColor(...getGrayColor(config.line_gray));
+
+            let dotY = y + mt;
+            while (dotY < y + height - mb) {
+                let dotX = x + ml;
+                while (dotX < x + width - mr) {
+                    doc.circle(dotX, dotY, dotRadius, 'F');
+                    dotX += spacing;
+                }
+                dotY += spacing;
+            }
+        }
+
+        function drawSquared(doc, x, y, width, height, config) {
+            const spacing = config.spacing;
+            const mt = config.margin_top;
+            const mb = config.margin_bottom;
+            const ml = config.margin_left;
+            const mr = config.margin_right;
+
+            doc.setDrawColor(...getGrayColor(config.line_gray));
+            doc.setLineWidth(config.line_weight * 0.352778);
+
+            const left = x + ml;
+            const right = x + width - mr;
+            const top = y + mt;
+            const bottom = y + height - mb;
+
+            // Vertical lines
+            let lineX = left;
+            while (lineX <= right) {
+                doc.line(lineX, top, lineX, bottom);
+                lineX += spacing;
+            }
+
+            // Horizontal lines
+            let lineY = top;
+            while (lineY <= bottom) {
+                doc.line(left, lineY, right, lineY);
+                lineY += spacing;
+            }
+        }
+
+        function drawCornell(doc, x, y, width, height, config) {
+            const ml = config.margin_left;
+            const mr = config.margin_right;
+            const mt = config.margin_top;
+            const spacing = config.spacing;
+
+            const cueWidth = width * 0.25;
+            const summaryHeight = height * 0.15;
+
+            doc.setDrawColor(...getGrayColor(config.line_gray));
+            doc.setLineWidth(config.line_weight * 0.352778 * 2);
+
+            // Vertical divider
+            doc.line(x + cueWidth, y + summaryHeight, x + cueWidth, y + height - mt);
+
+            // Horizontal divider
+            doc.line(x + ml, y + summaryHeight, x + width - mr, y + summaryHeight);
+
+            // Lines in note area
+            doc.setLineWidth(config.line_weight * 0.352778);
+            let lineY = y + mt + spacing;
+            while (lineY < y + height - summaryHeight - mt) {
+                doc.line(x + cueWidth + ml/2, lineY, x + width - mr, lineY);
+                lineY += spacing;
+            }
+        }
+
+        function drawIsometric(doc, x, y, width, height, config) {
+            const spacing = config.spacing;
+            const margin = config.margin_left;
+
+            const left = x + margin;
+            const right = x + width - margin;
+            const top = y + margin;
+            const bottom = y + height - margin;
+
+            doc.setDrawColor(...getGrayColor(config.line_gray));
+            doc.setLineWidth(config.line_weight * 0.352778);
+
+            const angle = Math.PI / 6; // 30 degrees
+            const dy = spacing * Math.tan(angle);
+
+            // Horizontal lines
+            let lineY = top;
+            while (lineY <= bottom) {
+                doc.line(left, lineY, right, lineY);
+                lineY += dy * 2;
+            }
+
+            // Diagonal lines (left-leaning)
+            const diagHeight = bottom - top;
+            const diagRun = diagHeight / Math.tan(angle);
+
+            for (let startX = left; startX <= right + diagRun; startX += spacing) {
+                let x1 = startX;
+                let y1 = bottom;
+                let x2 = startX - diagRun;
+                let y2 = top;
+
+                // Clip to bounds
+                if (x2 < left) {
+                    y2 = bottom - (startX - left) * Math.tan(angle);
+                    x2 = left;
+                }
+                if (x1 > right) {
+                    y1 = bottom - (startX - right) * Math.tan(angle);
+                    x1 = right;
+                }
+                if (y1 >= top && y2 <= bottom) {
+                    doc.line(x1, y1, x2, y2);
+                }
+            }
+
+            // Diagonal lines (right-leaning)
+            for (let startX = left - diagRun; startX <= right; startX += spacing) {
+                let x1 = startX;
+                let y1 = bottom;
+                let x2 = startX + diagRun;
+                let y2 = top;
+
+                if (x1 < left) {
+                    y1 = bottom - (left - startX) * Math.tan(angle);
+                    x1 = left;
+                }
+                if (x2 > right) {
+                    y2 = bottom - (right - startX) * Math.tan(angle);
+                    x2 = right;
+                }
+                if (y1 >= top && y2 <= bottom) {
+                    doc.line(x1, y1, x2, y2);
+                }
+            }
+        }
+
+        function drawHexagon(doc, cx, cy, size) {
+            const points = [];
+            for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 6;
+                points.push([
+                    cx + size * Math.cos(angle),
+                    cy + size * Math.sin(angle)
+                ]);
+            }
+
+            doc.lines(
+                points.slice(1).map((p, i) => [p[0] - points[i][0], p[1] - points[i][1]]),
+                points[0][0], points[0][1],
+                [1, 1], 'S', true
+            );
+        }
+
+        function drawHexagonal(doc, x, y, width, height, config) {
+            const size = config.spacing;
+            const margin = config.margin_left;
+
+            doc.setDrawColor(...getGrayColor(config.line_gray));
+            doc.setLineWidth(config.line_weight * 0.352778);
+
+            const hexWidth = size * 2;
+            const hexHeight = size * Math.sqrt(3);
+
+            let row = 0;
+            let hexY = y + margin + size;
+            while (hexY < y + height - margin - size) {
+                const offset = (row % 2) ? hexWidth * 0.75 : 0;
+                let hexX = x + margin + size + offset;
+                while (hexX < x + width - margin - size) {
+                    drawHexagon(doc, hexX, hexY, size);
+                    hexX += hexWidth * 1.5;
+                }
+                hexY += hexHeight / 2;
+                row++;
+            }
+        }
+
+        function drawPattern(doc, x, y, width, height, config) {
+            const patterns = {
+                lined: drawLined,
+                dotted: drawDotted,
+                squared: drawSquared,
+                cornell: drawCornell,
+                isometric: drawIsometric,
+                hexagonal: drawHexagonal,
+                blank: () => {}
+            };
+
+            const drawFn = patterns[config.pattern] || patterns.squared;
+            drawFn(doc, x, y, width, height, config);
+        }
+
+        function drawPageNumber(doc, pageWidth, pageHeight, pageNum, config) {
+            doc.setFontSize(8);
+            doc.setTextColor(128, 128, 128);
+
+            const x = (pageNum % 2 === 0) ? config.margin_left : pageWidth - config.margin_right;
+            doc.text(String(pageNum), x, pageHeight - config.margin_bottom / 2, {
+                align: pageNum % 2 === 0 ? 'left' : 'right'
+            });
+        }
+
+        function generatePDF() {
+            const config = getConfig();
+
+            // Get page dimensions
+            let [pageWidth, pageHeight] = PAGE_SIZES[config.page_size];
+            if (config.orientation === 'landscape') {
+                [pageWidth, pageHeight] = [pageHeight, pageWidth];
+            }
+
+            const doc = new jsPDF({
+                orientation: config.orientation,
+                unit: 'mm',
+                format: [pageWidth, pageHeight]
+            });
+
+            const totalPages = config.pages;
+            const pagesPerSheet = config.pages_per_sheet;
+            const sheetsNeeded = Math.ceil(totalPages / pagesPerSheet);
+
+            for (let sheet = 0; sheet < sheetsNeeded; sheet++) {
+                if (sheet > 0) doc.addPage();
+
+                const startPage = sheet * pagesPerSheet + 1;
+
+                if (pagesPerSheet === 1) {
+                    drawPattern(doc, 0, 0, pageWidth, pageHeight, config);
+                    if (config.page_numbers === 'yes') {
+                        drawPageNumber(doc, pageWidth, pageHeight, startPage, config);
+                    }
+                } else if (pagesPerSheet === 2) {
+                    const halfWidth = pageWidth / 2;
+                    drawPattern(doc, 0, 0, halfWidth, pageHeight, config);
+                    drawPattern(doc, halfWidth, 0, halfWidth, pageHeight, config);
+
+                    // Fold line
+                    doc.setDrawColor(230, 230, 230);
+                    doc.setLineWidth(0.1);
+                    doc.setLineDashPattern([2, 2], 0);
+                    doc.line(halfWidth, 0, halfWidth, pageHeight);
+                    doc.setLineDashPattern([], 0);
+                } else if (pagesPerSheet === 4) {
+                    const halfWidth = pageWidth / 2;
+                    const halfHeight = pageHeight / 2;
+
+                    drawPattern(doc, 0, 0, halfWidth, halfHeight, config);
+                    drawPattern(doc, halfWidth, 0, halfWidth, halfHeight, config);
+                    drawPattern(doc, 0, halfHeight, halfWidth, halfHeight, config);
+                    drawPattern(doc, halfWidth, halfHeight, halfWidth, halfHeight, config);
+
+                    // Fold lines
+                    doc.setDrawColor(230, 230, 230);
+                    doc.setLineWidth(0.1);
+                    doc.setLineDashPattern([2, 2], 0);
+                    doc.line(halfWidth, 0, halfWidth, pageHeight);
+                    doc.line(0, halfHeight, pageWidth, halfHeight);
+                    doc.setLineDashPattern([], 0);
+                }
+            }
+
+            const filename = `cuaderno_${config.pattern}_${config.page_size}_${config.pages}pag.pdf`;
+            doc.save(filename);
+        }
+    </script>
+</body>
+</html>
