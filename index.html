@@ -14,6 +14,7 @@
             --text-muted: #a0a0a0;
             --success: #4ecca3;
             --border: #2a2a4a;
+            --error: #e74c3c;
         }
 
         * {
@@ -94,7 +95,7 @@
             margin-bottom: 0.3rem;
         }
 
-        select, input {
+        select, input[type="number"] {
             width: 100%;
             padding: 0.6rem;
             background: var(--bg);
@@ -107,6 +108,31 @@
         select:focus, input:focus {
             outline: none;
             border-color: var(--success);
+        }
+
+        input[type="number"]:invalid,
+        input[type="number"].invalid {
+            border-color: var(--error);
+        }
+
+        input[type="number"] {
+            -moz-appearance: textfield;
+        }
+
+        input[type="number"]::-webkit-outer-spin-button,
+        input[type="number"]::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        .input-hint {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        .input-hint.error {
+            color: var(--error);
         }
 
         .description {
@@ -151,6 +177,11 @@
             transform: scale(0.98);
         }
 
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
         .btn-primary {
             background: var(--success);
             color: var(--bg);
@@ -166,6 +197,48 @@
             color: var(--text-muted);
             font-size: 0.85rem;
             margin-top: 1rem;
+        }
+
+        .preview-panel {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .preview-panel h2 {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .preview-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #2a2a3a;
+            border-radius: 4px;
+            padding: 1rem;
+            min-height: 300px;
+        }
+
+        #preview-canvas {
+            background: white;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 100%;
+            height: auto;
+        }
+
+        .preview-size-info {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.5rem;
         }
     </style>
 </head>
@@ -202,6 +275,7 @@
                 <div class="form-group">
                     <label for="pages">Numero de paginas</label>
                     <select id="pages" onchange="updateDescription(this)">
+                        <option value="1" data-desc="Una sola pagina. Para pruebas o plantillas individuales.">1 pagina</option>
                         <option value="8" data-desc="Cuadernillo simple. Un solo pliego A4 doblado.">8 paginas</option>
                         <option value="16" data-desc="Dos pliegos. Libreta pequena.">16 paginas</option>
                         <option value="32" selected data-desc="Estandar para cuadernillos. Signature comun.">32 paginas</option>
@@ -214,7 +288,7 @@
 
                 <div class="form-group">
                     <label for="pages_per_sheet">Paginas por hoja</label>
-                    <select id="pages_per_sheet" onchange="updateDescription(this)">
+                    <select id="pages_per_sheet" onchange="updateDescription(this); toggleFoldLinesOption()">
                         <option value="1" data-desc="Una pagina por hoja. Sin imposicion.">1 pagina/hoja</option>
                         <option value="2" data-desc="Dos paginas lado a lado. Para doblar por la mitad.">2 paginas/hoja</option>
                         <option value="4" data-desc="Imposicion para cuadernillo. Saddle-stitch.">4 paginas/hoja</option>
@@ -253,10 +327,12 @@
                 <div class="form-group">
                     <label for="line_gray">Color de linea</label>
                     <select id="line_gray" onchange="updateDescription(this)">
-                        <option value="50" data-desc="Lineas bien visibles. Para uso con lapiz.">50% - Gris medio</option>
-                        <option value="65" data-desc="Buen contraste. Visibles pero no dominantes.">65% - Gris claro</option>
-                        <option value="75" selected data-desc="Estandar espanol. Discretas pero visibles.">75% - Gris suave</option>
-                        <option value="85" data-desc="Muy sutiles. Las lineas no compiten con la escritura.">85% - Gris muy claro</option>
+                        <option value="20" data-desc="Casi negro. Maxima visibilidad, para uso tecnico.">20% - Muy oscuro</option>
+                        <option value="35" data-desc="Gris oscuro. Lineas muy marcadas.">35% - Oscuro</option>
+                        <option value="50" data-desc="Gris medio. Lineas bien visibles, para lapiz.">50% - Medio</option>
+                        <option value="65" data-desc="Buen contraste. Visibles pero no dominantes.">65% - Claro</option>
+                        <option value="75" selected data-desc="Estandar espanol. Discretas pero visibles.">75% - Suave</option>
+                        <option value="85" data-desc="Muy sutiles. Las lineas no compiten con la escritura.">85% - Muy claro</option>
                     </select>
                 </div>
 
@@ -267,6 +343,9 @@
                         <option value="0.3" selected data-desc="Estandar para cuadernos de calidad.">0.3 pt - Fino</option>
                         <option value="0.4" data-desc="Grosor medio. Buena visibilidad.">0.4 pt - Normal</option>
                         <option value="0.5" data-desc="Lineas mas marcadas. Para patrones grandes.">0.5 pt - Grueso</option>
+                        <option value="0.7" data-desc="Lineas prominentes. Alta visibilidad.">0.7 pt - Bold</option>
+                        <option value="1.0" data-desc="Lineas muy gruesas. Para cuadriculas grandes o dibujo.">1.0 pt - Extra Bold</option>
+                        <option value="1.5" data-desc="Lineas muy marcadas. Estilo cuaderno escolar.">1.5 pt - Ultra Bold</option>
                     </select>
                 </div>
             </div>
@@ -278,39 +357,23 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label for="margin_top">Superior</label>
-                        <select id="margin_top">
-                            <option value="5">5 mm</option>
-                            <option value="10" selected>10 mm</option>
-                            <option value="15">15 mm</option>
-                            <option value="20">20 mm</option>
-                        </select>
+                        <input type="number" id="margin_top" value="10" min="0" max="50" step="1" onchange="validateMargin(this)">
+                        <div class="input-hint">0-50 mm</div>
                     </div>
                     <div class="form-group">
                         <label for="margin_bottom">Inferior</label>
-                        <select id="margin_bottom">
-                            <option value="5">5 mm</option>
-                            <option value="10" selected>10 mm</option>
-                            <option value="15">15 mm</option>
-                            <option value="20">20 mm</option>
-                        </select>
+                        <input type="number" id="margin_bottom" value="10" min="0" max="50" step="1" onchange="validateMargin(this)">
+                        <div class="input-hint">0-50 mm</div>
                     </div>
                     <div class="form-group">
                         <label for="margin_left">Izquierdo</label>
-                        <select id="margin_left">
-                            <option value="5">5 mm</option>
-                            <option value="10">10 mm</option>
-                            <option value="15" selected>15 mm</option>
-                            <option value="20">20 mm</option>
-                        </select>
+                        <input type="number" id="margin_left" value="15" min="0" max="50" step="1" onchange="validateMargin(this)">
+                        <div class="input-hint">0-50 mm</div>
                     </div>
                     <div class="form-group">
                         <label for="margin_right">Derecho</label>
-                        <select id="margin_right">
-                            <option value="5">5 mm</option>
-                            <option value="10" selected>10 mm</option>
-                            <option value="15">15 mm</option>
-                            <option value="20">20 mm</option>
-                        </select>
+                        <input type="number" id="margin_right" value="10" min="0" max="50" step="1" onchange="validateMargin(this)">
+                        <div class="input-hint">0-50 mm</div>
                     </div>
                 </div>
             </div>
@@ -331,6 +394,13 @@
                         <option value="yes">Numeradas</option>
                     </select>
                 </div>
+                <div class="form-group" id="fold_lines_group" style="display: none;">
+                    <label for="fold_lines">Lineas de plegado</label>
+                    <select id="fold_lines">
+                        <option value="yes">Mostrar lineas de corte/plegado</option>
+                        <option value="no">Sin lineas de corte/plegado</option>
+                    </select>
+                </div>
             </div>
         </div>
 
@@ -339,8 +409,16 @@
             <p>Patron de cuadrados. El mas versatil, muy popular en Espana.</p>
         </div>
 
+        <div class="preview-panel">
+            <h2>Vista previa</h2>
+            <div class="preview-container">
+                <canvas id="preview-canvas"></canvas>
+            </div>
+            <p class="preview-size-info" id="preview-size-info">A5 Portrait - 148 x 210 mm</p>
+        </div>
+
         <div class="actions">
-            <button class="btn-primary" onclick="generatePDF()">Generar PDF</button>
+            <button class="btn-primary" id="generate-btn" onclick="generatePDF()">Generar PDF</button>
             <button class="btn-secondary" onclick="resetDefaults()">Restablecer</button>
         </div>
 
@@ -359,22 +437,53 @@
             letter: [216, 279]
         };
 
+        function validateMargin(input) {
+            const value = parseFloat(input.value);
+            const min = parseFloat(input.min);
+            const max = parseFloat(input.max);
+            const hint = input.nextElementSibling;
+
+            if (isNaN(value) || value < min || value > max) {
+                input.classList.add('invalid');
+                hint.classList.add('error');
+                hint.textContent = `Debe ser entre ${min} y ${max} mm`;
+                return false;
+            } else {
+                input.classList.remove('invalid');
+                hint.classList.remove('error');
+                hint.textContent = `${min}-${max} mm`;
+                return true;
+            }
+        }
+
+        function validateAllMargins() {
+            const margins = ['margin_top', 'margin_bottom', 'margin_left', 'margin_right'];
+            return margins.every(id => validateMargin(document.getElementById(id)));
+        }
+
+        function toggleFoldLinesOption() {
+            const pagesPerSheet = parseInt(document.getElementById('pages_per_sheet').value);
+            const foldLinesGroup = document.getElementById('fold_lines_group');
+            foldLinesGroup.style.display = pagesPerSheet > 1 ? 'block' : 'none';
+        }
+
         function getConfig() {
             return {
                 page_size: document.getElementById('page_size').value,
                 orientation: document.getElementById('orientation').value,
                 pattern: document.getElementById('pattern').value,
                 spacing: parseFloat(document.getElementById('spacing').value),
-                margin_top: parseFloat(document.getElementById('margin_top').value),
-                margin_bottom: parseFloat(document.getElementById('margin_bottom').value),
-                margin_left: parseFloat(document.getElementById('margin_left').value),
-                margin_right: parseFloat(document.getElementById('margin_right').value),
+                margin_top: parseFloat(document.getElementById('margin_top').value) || 10,
+                margin_bottom: parseFloat(document.getElementById('margin_bottom').value) || 10,
+                margin_left: parseFloat(document.getElementById('margin_left').value) || 15,
+                margin_right: parseFloat(document.getElementById('margin_right').value) || 10,
                 line_gray: parseInt(document.getElementById('line_gray').value),
                 line_weight: parseFloat(document.getElementById('line_weight').value),
                 pages: parseInt(document.getElementById('pages').value),
                 pages_per_sheet: parseInt(document.getElementById('pages_per_sheet').value),
                 header_line: document.getElementById('header_line').value,
-                page_numbers: document.getElementById('page_numbers').value
+                page_numbers: document.getElementById('page_numbers').value,
+                fold_lines: document.getElementById('fold_lines').value
             };
         }
 
@@ -402,6 +511,18 @@
             document.getElementById('pages_per_sheet').value = '1';
             document.getElementById('header_line').value = 'no';
             document.getElementById('page_numbers').value = 'no';
+            document.getElementById('fold_lines').value = 'yes';
+
+            // Clear validation errors
+            ['margin_top', 'margin_bottom', 'margin_left', 'margin_right'].forEach(id => {
+                const input = document.getElementById(id);
+                input.classList.remove('invalid');
+                const hint = input.nextElementSibling;
+                hint.classList.remove('error');
+                hint.textContent = '0-50 mm';
+            });
+
+            toggleFoldLinesOption();
         }
 
         function getGrayColor(percent) {
@@ -417,7 +538,7 @@
             const mr = config.margin_right;
 
             doc.setDrawColor(...getGrayColor(config.line_gray));
-            doc.setLineWidth(config.line_weight * 0.352778); // pt to mm
+            doc.setLineWidth(config.line_weight * 0.352778);
 
             let startY = y + mt + spacing;
             if (config.header_line === 'yes') {
@@ -470,14 +591,12 @@
             const top = y + mt;
             const bottom = y + height - mb;
 
-            // Vertical lines
             let lineX = left;
             while (lineX <= right) {
                 doc.line(lineX, top, lineX, bottom);
                 lineX += spacing;
             }
 
-            // Horizontal lines
             let lineY = top;
             while (lineY <= bottom) {
                 doc.line(left, lineY, right, lineY);
@@ -497,13 +616,9 @@
             doc.setDrawColor(...getGrayColor(config.line_gray));
             doc.setLineWidth(config.line_weight * 0.352778 * 2);
 
-            // Vertical divider
             doc.line(x + cueWidth, y + summaryHeight, x + cueWidth, y + height - mt);
-
-            // Horizontal divider
             doc.line(x + ml, y + summaryHeight, x + width - mr, y + summaryHeight);
 
-            // Lines in note area
             doc.setLineWidth(config.line_weight * 0.352778);
             let lineY = y + mt + spacing;
             while (lineY < y + height - summaryHeight - mt) {
@@ -524,17 +639,15 @@
             doc.setDrawColor(...getGrayColor(config.line_gray));
             doc.setLineWidth(config.line_weight * 0.352778);
 
-            const angle = Math.PI / 6; // 30 degrees
+            const angle = Math.PI / 6;
             const dy = spacing * Math.tan(angle);
 
-            // Horizontal lines
             let lineY = top;
             while (lineY <= bottom) {
                 doc.line(left, lineY, right, lineY);
                 lineY += dy * 2;
             }
 
-            // Diagonal lines (left-leaning)
             const diagHeight = bottom - top;
             const diagRun = diagHeight / Math.tan(angle);
 
@@ -544,7 +657,6 @@
                 let x2 = startX - diagRun;
                 let y2 = top;
 
-                // Clip to bounds
                 if (x2 < left) {
                     y2 = bottom - (startX - left) * Math.tan(angle);
                     x2 = left;
@@ -558,7 +670,6 @@
                 }
             }
 
-            // Diagonal lines (right-leaning)
             for (let startX = left - diagRun; startX <= right; startX += spacing) {
                 let x1 = startX;
                 let y1 = bottom;
@@ -645,10 +756,34 @@
             });
         }
 
+        function drawFoldLines(doc, pageWidth, pageHeight, pagesPerSheet, config) {
+            if (config.fold_lines !== 'yes') return;
+
+            doc.setDrawColor(230, 230, 230);
+            doc.setLineWidth(0.1);
+            doc.setLineDashPattern([2, 2], 0);
+
+            if (pagesPerSheet === 2) {
+                const halfWidth = pageWidth / 2;
+                doc.line(halfWidth, 0, halfWidth, pageHeight);
+            } else if (pagesPerSheet === 4) {
+                const halfWidth = pageWidth / 2;
+                const halfHeight = pageHeight / 2;
+                doc.line(halfWidth, 0, halfWidth, pageHeight);
+                doc.line(0, halfHeight, pageWidth, halfHeight);
+            }
+
+            doc.setLineDashPattern([], 0);
+        }
+
         function generatePDF() {
+            if (!validateAllMargins()) {
+                alert('Por favor, corrige los valores de los margenes antes de generar el PDF.');
+                return;
+            }
+
             const config = getConfig();
 
-            // Get page dimensions
             let [pageWidth, pageHeight] = PAGE_SIZES[config.page_size];
             if (config.orientation === 'landscape') {
                 [pageWidth, pageHeight] = [pageHeight, pageWidth];
@@ -678,13 +813,7 @@
                     const halfWidth = pageWidth / 2;
                     drawPattern(doc, 0, 0, halfWidth, pageHeight, config);
                     drawPattern(doc, halfWidth, 0, halfWidth, pageHeight, config);
-
-                    // Fold line
-                    doc.setDrawColor(230, 230, 230);
-                    doc.setLineWidth(0.1);
-                    doc.setLineDashPattern([2, 2], 0);
-                    doc.line(halfWidth, 0, halfWidth, pageHeight);
-                    doc.setLineDashPattern([], 0);
+                    drawFoldLines(doc, pageWidth, pageHeight, pagesPerSheet, config);
                 } else if (pagesPerSheet === 4) {
                     const halfWidth = pageWidth / 2;
                     const halfHeight = pageHeight / 2;
@@ -693,20 +822,259 @@
                     drawPattern(doc, halfWidth, 0, halfWidth, halfHeight, config);
                     drawPattern(doc, 0, halfHeight, halfWidth, halfHeight, config);
                     drawPattern(doc, halfWidth, halfHeight, halfWidth, halfHeight, config);
-
-                    // Fold lines
-                    doc.setDrawColor(230, 230, 230);
-                    doc.setLineWidth(0.1);
-                    doc.setLineDashPattern([2, 2], 0);
-                    doc.line(halfWidth, 0, halfWidth, pageHeight);
-                    doc.line(0, halfHeight, pageWidth, halfHeight);
-                    doc.setLineDashPattern([], 0);
+                    drawFoldLines(doc, pageWidth, pageHeight, pagesPerSheet, config);
                 }
             }
 
             const filename = `cuaderno_${config.pattern}_${config.page_size}_${config.pages}pag.pdf`;
             doc.save(filename);
         }
+
+        // Preview rendering
+        const PREVIEW_MAX_HEIGHT = 280;
+        const PREVIEW_SCALE = 1.5; // pixels per mm
+
+        function updatePreview() {
+            const config = getConfig();
+            const canvas = document.getElementById('preview-canvas');
+            const ctx = canvas.getContext('2d');
+
+            // Get page dimensions in mm
+            let [pageWidth, pageHeight] = PAGE_SIZES[config.page_size];
+            if (config.orientation === 'landscape') {
+                [pageWidth, pageHeight] = [pageHeight, pageWidth];
+            }
+
+            // Calculate scale to fit preview
+            const scale = Math.min(PREVIEW_MAX_HEIGHT / pageHeight, (400) / pageWidth) * PREVIEW_SCALE;
+
+            // Set canvas size
+            canvas.width = pageWidth * scale;
+            canvas.height = pageHeight * scale;
+
+            // Clear and fill white background
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Draw pattern based on pages per sheet
+            const pagesPerSheet = config.pages_per_sheet;
+
+            if (pagesPerSheet === 1) {
+                drawPreviewPattern(ctx, 0, 0, canvas.width, canvas.height, config, scale);
+            } else if (pagesPerSheet === 2) {
+                const halfWidth = canvas.width / 2;
+                drawPreviewPattern(ctx, 0, 0, halfWidth, canvas.height, config, scale);
+                drawPreviewPattern(ctx, halfWidth, 0, halfWidth, canvas.height, config, scale);
+
+                if (config.fold_lines === 'yes') {
+                    ctx.strokeStyle = '#e6e6e6';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(halfWidth, 0);
+                    ctx.lineTo(halfWidth, canvas.height);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            } else if (pagesPerSheet === 4) {
+                const halfWidth = canvas.width / 2;
+                const halfHeight = canvas.height / 2;
+
+                drawPreviewPattern(ctx, 0, 0, halfWidth, halfHeight, config, scale);
+                drawPreviewPattern(ctx, halfWidth, 0, halfWidth, halfHeight, config, scale);
+                drawPreviewPattern(ctx, 0, halfHeight, halfWidth, halfHeight, config, scale);
+                drawPreviewPattern(ctx, halfWidth, halfHeight, halfWidth, halfHeight, config, scale);
+
+                if (config.fold_lines === 'yes') {
+                    ctx.strokeStyle = '#e6e6e6';
+                    ctx.lineWidth = 1;
+                    ctx.setLineDash([4, 4]);
+                    ctx.beginPath();
+                    ctx.moveTo(halfWidth, 0);
+                    ctx.lineTo(halfWidth, canvas.height);
+                    ctx.moveTo(0, halfHeight);
+                    ctx.lineTo(canvas.width, halfHeight);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+
+            // Update size info
+            const sizeInfo = document.getElementById('preview-size-info');
+            const orientationText = config.orientation === 'portrait' ? 'Vertical' : 'Horizontal';
+            sizeInfo.textContent = `${config.page_size.toUpperCase()} ${orientationText} - ${pageWidth} x ${pageHeight} mm`;
+        }
+
+        function drawPreviewPattern(ctx, x, y, width, height, config, scale) {
+            const pattern = config.pattern;
+            const spacing = config.spacing * scale;
+            const mt = config.margin_top * scale;
+            const mb = config.margin_bottom * scale;
+            const ml = config.margin_left * scale;
+            const mr = config.margin_right * scale;
+
+            const grayValue = Math.round(255 * config.line_gray / 100);
+            const grayColor = `rgb(${grayValue}, ${grayValue}, ${grayValue})`;
+            const lineWidth = Math.max(0.5, config.line_weight * scale * 0.3);
+
+            ctx.strokeStyle = grayColor;
+            ctx.fillStyle = grayColor;
+            ctx.lineWidth = lineWidth;
+
+            const left = x + ml;
+            const right = x + width - mr;
+            const top = y + mt;
+            const bottom = y + height - mb;
+
+            if (pattern === 'blank') {
+                return;
+            }
+
+            if (pattern === 'lined') {
+                let startY = top + spacing;
+                if (config.header_line === 'yes') {
+                    ctx.lineWidth = lineWidth * 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(left, top);
+                    ctx.lineTo(right, top);
+                    ctx.stroke();
+                    ctx.lineWidth = lineWidth;
+                    startY = top + spacing * 2;
+                }
+
+                ctx.beginPath();
+                for (let ly = startY; ly < bottom; ly += spacing) {
+                    ctx.moveTo(left, ly);
+                    ctx.lineTo(right, ly);
+                }
+                ctx.stroke();
+            }
+
+            if (pattern === 'dotted') {
+                const dotRadius = Math.max(0.5, lineWidth * 0.8);
+                for (let dy = top; dy < bottom; dy += spacing) {
+                    for (let dx = left; dx < right; dx += spacing) {
+                        ctx.beginPath();
+                        ctx.arc(dx, dy, dotRadius, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+            }
+
+            if (pattern === 'squared') {
+                ctx.beginPath();
+                // Vertical lines
+                for (let lx = left; lx <= right; lx += spacing) {
+                    ctx.moveTo(lx, top);
+                    ctx.lineTo(lx, bottom);
+                }
+                // Horizontal lines
+                for (let ly = top; ly <= bottom; ly += spacing) {
+                    ctx.moveTo(left, ly);
+                    ctx.lineTo(right, ly);
+                }
+                ctx.stroke();
+            }
+
+            if (pattern === 'cornell') {
+                const cueWidth = width * 0.25;
+                const summaryHeight = height * 0.15;
+
+                ctx.lineWidth = lineWidth * 2;
+                ctx.beginPath();
+                ctx.moveTo(x + cueWidth, y + summaryHeight);
+                ctx.lineTo(x + cueWidth, y + height - mt);
+                ctx.moveTo(x + ml, y + summaryHeight);
+                ctx.lineTo(x + width - mr, y + summaryHeight);
+                ctx.stroke();
+
+                ctx.lineWidth = lineWidth;
+                ctx.beginPath();
+                for (let ly = top + spacing; ly < y + height - summaryHeight - mt; ly += spacing) {
+                    ctx.moveTo(x + cueWidth + ml/2, ly);
+                    ctx.lineTo(right, ly);
+                }
+                ctx.stroke();
+            }
+
+            if (pattern === 'isometric') {
+                const angle = Math.PI / 6;
+                const dy = spacing * Math.tan(angle);
+
+                ctx.beginPath();
+                // Horizontal lines
+                for (let ly = top; ly <= bottom; ly += dy * 2) {
+                    ctx.moveTo(left, ly);
+                    ctx.lineTo(right, ly);
+                }
+                ctx.stroke();
+
+                // Diagonals (simplified for preview)
+                const diagHeight = bottom - top;
+                const diagRun = diagHeight / Math.tan(angle);
+
+                ctx.beginPath();
+                for (let startX = left; startX <= right + diagRun; startX += spacing) {
+                    let x1 = startX, y1 = bottom;
+                    let x2 = startX - diagRun, y2 = top;
+                    if (x2 < left) { y2 = bottom - (startX - left) * Math.tan(angle); x2 = left; }
+                    if (x1 > right) { y1 = bottom - (startX - right) * Math.tan(angle); x1 = right; }
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+                for (let startX = left - diagRun; startX <= right; startX += spacing) {
+                    let x1 = startX, y1 = bottom;
+                    let x2 = startX + diagRun, y2 = top;
+                    if (x1 < left) { y1 = bottom - (left - startX) * Math.tan(angle); x1 = left; }
+                    if (x2 > right) { y2 = bottom - (right - startX) * Math.tan(angle); x2 = right; }
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                }
+                ctx.stroke();
+            }
+
+            if (pattern === 'hexagonal') {
+                const size = spacing / 2;
+                const hexWidth = size * 2;
+                const hexHeight = size * Math.sqrt(3);
+
+                let row = 0;
+                for (let hy = top + size; hy < bottom - size; hy += hexHeight / 2) {
+                    const offset = (row % 2) ? hexWidth * 0.75 : 0;
+                    for (let hx = left + size + offset; hx < right - size; hx += hexWidth * 1.5) {
+                        drawPreviewHexagon(ctx, hx, hy, size);
+                    }
+                    row++;
+                }
+            }
+        }
+
+        function drawPreviewHexagon(ctx, cx, cy, size) {
+            ctx.beginPath();
+            for (let i = 0; i < 6; i++) {
+                const angle = (Math.PI / 3) * i - Math.PI / 6;
+                const x = cx + size * Math.cos(angle);
+                const y = cy + size * Math.sin(angle);
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.closePath();
+            ctx.stroke();
+        }
+
+        // Add change listeners to all inputs
+        function setupPreviewListeners() {
+            const inputs = document.querySelectorAll('select, input');
+            inputs.forEach(input => {
+                input.addEventListener('change', updatePreview);
+                input.addEventListener('input', updatePreview);
+            });
+        }
+
+        // Initialize
+        toggleFoldLinesOption();
+        setupPreviewListeners();
+        updatePreview();
     </script>
 </body>
 </html>
