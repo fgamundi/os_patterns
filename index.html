@@ -28,7 +28,19 @@
             background: var(--bg);
             color: var(--text);
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+
+        .app-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
             padding: 2rem;
+            overflow-x: hidden;
         }
 
         .container {
@@ -240,14 +252,257 @@
             color: var(--text-muted);
             margin-top: 0.5rem;
         }
+
+        /* ==================================================================
+           SIDEBAR - Favorites
+           ================================================================== */
+
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            transition: transform 300ms ease-in-out;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 1rem 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-header h2 {
+            font-size: 1rem;
+            margin: 0;
+            color: var(--success);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .sidebar-actions {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sidebar-actions .btn-save {
+            width: 100%;
+            padding: 0.7rem;
+            background: var(--success);
+            color: var(--bg);
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            margin-bottom: 0.5rem;
+            transition: opacity 0.15s;
+        }
+
+        .sidebar-actions .btn-save:hover {
+            opacity: 0.9;
+        }
+
+        .sidebar-actions-row {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .sidebar-actions-row button {
+            flex: 1;
+            padding: 0.6rem;
+            background: var(--accent);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: background 0.15s;
+        }
+
+        .sidebar-actions-row button:hover {
+            background: var(--bg);
+        }
+
+        .favorites-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .favorite-item {
+            background: var(--accent);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .favorite-item:hover {
+            background: #1a4070;
+            border-color: var(--success);
+        }
+
+        .favorite-item.active {
+            border-color: var(--success);
+            background: #1a4070;
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .favorite-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.3rem;
+            color: var(--text);
+            word-break: break-word;
+        }
+
+        .favorite-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.2rem;
+        }
+
+        .favorite-date {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            opacity: 0.7;
+            margin-bottom: 0.5rem;
+        }
+
+        .favorite-actions {
+            display: flex;
+            gap: 0.4rem;
+        }
+
+        .btn-icon {
+            flex: 1;
+            padding: 0.4rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.15s;
+        }
+
+        .btn-icon:hover {
+            background: var(--bg-secondary);
+            transform: scale(1.05);
+        }
+
+        .btn-icon.btn-danger:hover {
+            background: var(--error);
+            border-color: var(--error);
+        }
+
+        .favorites-empty {
+            padding: 2rem 1rem;
+            text-align: center;
+            color: var(--text-muted);
+        }
+
+        .favorites-empty p {
+            margin-bottom: 0.5rem;
+        }
+
+        .empty-hint {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        /* Mobile toggle button */
+        .sidebar-toggle-btn {
+            display: none;
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1001;
+            background: var(--success);
+            color: var(--bg);
+            border: none;
+            border-radius: 6px;
+            width: 44px;
+            height: 44px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Mobile responsiveness */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100vh;
+                z-index: 1000;
+                box-shadow: 2px 0 10px rgba(0, 0, 0, 0.3);
+            }
+
+            .sidebar.collapsed {
+                transform: translateX(-100%);
+            }
+
+            .sidebar-toggle-btn {
+                display: block;
+            }
+
+            .main-content {
+                padding: 1rem;
+                padding-top: 4rem; /* Space for toggle button */
+            }
+
+            .panels {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Generador de Cuadernos PDF</h1>
-            <p>Encuadernacion artesanal espanola</p>
-        </header>
+    <div class="app-wrapper">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Favoritos</h2>
+            </div>
+
+            <div class="sidebar-actions">
+                <button class="btn-save" onclick="saveFavoritePrompt()">⭐ Guardar actual</button>
+                <div class="sidebar-actions-row">
+                    <button class="btn-export" onclick="exportFavorites()" title="Exportar favoritos">📤</button>
+                    <button class="btn-import" onclick="document.getElementById('import-file').click()" title="Importar favoritos">📥</button>
+                    <input type="file" id="import-file" accept=".json" style="display:none" onchange="if(this.files[0]) importFavorites(this.files[0]); this.value='';">
+                </div>
+            </div>
+
+            <div id="favorites-list" class="favorites-list"></div>
+
+            <div id="favorites-empty" class="favorites-empty" style="display: none;">
+                <p>No hay favoritos guardados</p>
+                <p class="empty-hint">Configura tu cuaderno y guarda tus ajustes favoritos</p>
+            </div>
+        </aside>
+
+        <!-- Mobile sidebar toggle -->
+        <button class="sidebar-toggle-btn" onclick="toggleSidebar()" aria-label="Toggle favorites sidebar">
+            ☰
+        </button>
+
+        <!-- Main content -->
+        <div class="main-content">
+            <div class="container">
+                <header>
+                    <h1>Generador de Cuadernos PDF</h1>
+                    <p>Encuadernacion artesanal espanola</p>
+                </header>
 
         <div class="panels">
             <div class="panel">
@@ -423,7 +678,9 @@
         </div>
 
         <p class="preview-info">El PDF se descargara automaticamente</p>
-    </div>
+            </div><!-- /.container -->
+        </div><!-- /.main-content -->
+    </div><!-- /.app-wrapper -->
 
     <script>
         const { jsPDF } = window.jspdf;
@@ -436,6 +693,241 @@
             b5: [176, 250],
             letter: [216, 279]
         };
+
+        // ==================================================================
+        // FAVORITES - LocalStorage Management
+        // ==================================================================
+
+        const STORAGE_KEY = 'notebook_favorites';
+
+        function generateId() {
+            return Date.now().toString(36) + Math.random().toString(36).substr(2);
+        }
+
+        function loadFavorites() {
+            try {
+                const data = localStorage.getItem(STORAGE_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                console.error('Error loading favorites:', e);
+                return [];
+            }
+        }
+
+        function saveFavorites(favorites) {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(favorites));
+                return true;
+            } catch (e) {
+                if (e.name === 'QuotaExceededError') {
+                    alert('Error: Espacio de almacenamiento lleno. Elimina algunos favoritos.');
+                } else {
+                    alert('Error al guardar favoritos.');
+                }
+                console.error('Error saving favorites:', e);
+                return false;
+            }
+        }
+
+        function addFavorite(name, config) {
+            const favorites = loadFavorites();
+            const favorite = {
+                id: generateId(),
+                name: name || 'Sin nombre',
+                timestamp: Date.now(),
+                config: config
+            };
+            favorites.push(favorite);
+            if (saveFavorites(favorites)) {
+                renderFavorites();
+                return favorite.id;
+            }
+            return null;
+        }
+
+        function deleteFavorite(id) {
+            const favorites = loadFavorites();
+            const filtered = favorites.filter(f => f.id !== id);
+            if (saveFavorites(filtered)) {
+                renderFavorites();
+                return true;
+            }
+            return false;
+        }
+
+        function duplicateFavorite(id) {
+            const favorites = loadFavorites();
+            const original = favorites.find(f => f.id === id);
+            if (!original) return null;
+
+            const copy = {
+                id: generateId(),
+                name: original.name + ' (Copia)',
+                timestamp: Date.now(),
+                config: { ...original.config }
+            };
+            favorites.push(copy);
+            if (saveFavorites(favorites)) {
+                renderFavorites();
+                setTimeout(() => {
+                    const element = document.getElementById('fav-' + copy.id);
+                    if (element) element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 100);
+                return copy.id;
+            }
+            return null;
+        }
+
+        function loadFavorite(id) {
+            const favorites = loadFavorites();
+            const favorite = favorites.find(f => f.id === id);
+            if (favorite) {
+                setConfig(favorite.config);
+                // Visual feedback
+                const elements = document.querySelectorAll('.favorite-item');
+                elements.forEach(el => el.classList.remove('active'));
+                const element = document.getElementById('fav-' + id);
+                if (element) {
+                    element.classList.add('active');
+                    setTimeout(() => element.classList.remove('active'), 2000);
+                }
+            }
+        }
+
+        function exportFavorites() {
+            const favorites = loadFavorites();
+            if (favorites.length === 0) {
+                alert('No hay favoritos para exportar.');
+                return;
+            }
+
+            const dataStr = JSON.stringify(favorites, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `notebook-favorites-${new Date().toISOString().split('T')[0]}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function importFavorites(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!Array.isArray(imported)) {
+                        throw new Error('Invalid format');
+                    }
+
+                    // Validate and merge
+                    const current = loadFavorites();
+                    const merged = [...current];
+                    let imported_count = 0;
+
+                    imported.forEach(fav => {
+                        if (fav.config && fav.name) {
+                            // Assign new ID to avoid conflicts
+                            merged.push({
+                                id: generateId(),
+                                name: fav.name,
+                                timestamp: Date.now(),
+                                config: fav.config
+                            });
+                            imported_count++;
+                        }
+                    });
+
+                    if (saveFavorites(merged)) {
+                        renderFavorites();
+                        alert(`${imported_count} favoritos importados correctamente.`);
+                    }
+                } catch (error) {
+                    alert('Error: Archivo inválido. Debe ser un archivo JSON válido de favoritos.');
+                    console.error('Import error:', error);
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function saveFavoritePrompt() {
+            const name = prompt('Nombre para esta configuración:');
+            if (name === null) return; // User cancelled
+            if (name.trim() === '') {
+                if (!confirm('¿Guardar sin nombre?')) return;
+            }
+
+            const config = getConfig();
+            const id = addFavorite(name.trim() || 'Sin nombre', config);
+            if (id) {
+                alert('Configuración guardada!');
+            }
+        }
+
+        function renderFavorites() {
+            const favorites = loadFavorites();
+            const container = document.getElementById('favorites-list');
+            const emptyState = document.getElementById('favorites-empty');
+
+            if (favorites.length === 0) {
+                container.style.display = 'none';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            container.style.display = 'block';
+            emptyState.style.display = 'none';
+
+            // Sort by timestamp, newest first
+            favorites.sort((a, b) => b.timestamp - a.timestamp);
+
+            container.innerHTML = favorites.map(fav => {
+                const date = new Date(fav.timestamp).toLocaleDateString('es-ES', {
+                    day: '2-digit', month: 'short', year: 'numeric'
+                });
+                const pattern = fav.config.pattern || 'squared';
+                const pageSize = (fav.config.page_size || 'a5').toUpperCase();
+                const spacing = fav.config.spacing || 5;
+
+                return `
+                    <div class="favorite-item" id="fav-${fav.id}">
+                        <div class="favorite-name">${escapeHtml(fav.name)}</div>
+                        <div class="favorite-meta">${pattern} · ${pageSize} · ${spacing}mm</div>
+                        <div class="favorite-date">${date}</div>
+                        <div class="favorite-actions">
+                            <button class="btn-icon" onclick="loadFavorite('${fav.id}')" title="Cargar">📂</button>
+                            <button class="btn-icon" onclick="duplicateFavorite('${fav.id}')" title="Duplicar">📋</button>
+                            <button class="btn-icon btn-danger" onclick="confirmDeleteFavorite('${fav.id}')" title="Eliminar">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function confirmDeleteFavorite(id) {
+            const favorites = loadFavorites();
+            const fav = favorites.find(f => f.id === id);
+            if (!fav) return;
+
+            if (confirm(`¿Eliminar "${fav.name}"?`)) {
+                deleteFavorite(id);
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        // ==================================================================
+        // END FAVORITES
+        // ==================================================================
 
         function validateMargin(input) {
             const value = parseFloat(input.value);
@@ -490,6 +982,33 @@
                 page_numbers: document.getElementById('page_numbers').value,
                 fold_lines: document.getElementById('fold_lines').value
             };
+        }
+
+        function setConfig(config) {
+            // Set all form values from config object
+            if (config.page_size) document.getElementById('page_size').value = config.page_size;
+            if (config.orientation) document.getElementById('orientation').value = config.orientation;
+            if (config.pattern) document.getElementById('pattern').value = config.pattern;
+            if (config.spacing) document.getElementById('spacing').value = config.spacing;
+            if (config.margin_top !== undefined) document.getElementById('margin_top').value = config.margin_top;
+            if (config.margin_bottom !== undefined) document.getElementById('margin_bottom').value = config.margin_bottom;
+            if (config.margin_left !== undefined) document.getElementById('margin_left').value = config.margin_left;
+            if (config.margin_right !== undefined) document.getElementById('margin_right').value = config.margin_right;
+            if (config.line_gray) document.getElementById('line_gray').value = config.line_gray;
+            if (config.line_weight) document.getElementById('line_weight').value = config.line_weight;
+            if (config.pages) document.getElementById('pages').value = config.pages;
+            if (config.pages_per_sheet) document.getElementById('pages_per_sheet').value = config.pages_per_sheet;
+            if (config.header_line) document.getElementById('header_line').value = config.header_line;
+            if (config.page_numbers) document.getElementById('page_numbers').value = config.page_numbers;
+            if (config.fold_lines) document.getElementById('fold_lines').value = config.fold_lines;
+
+            // Update UI after setting values
+            updateDescription(document.getElementById('pattern'));
+            ['margin_top', 'margin_bottom', 'margin_left', 'margin_right'].forEach(id => {
+                validateMargin(document.getElementById(id));
+            });
+            toggleFoldLinesOption();
+            updatePreview();
         }
 
         function updateDescription(selectElement) {
@@ -1204,6 +1723,12 @@
         toggleFoldLinesOption();
         setupPreviewListeners();
         updatePreview();
+        renderFavorites(); // Initialize favorites sidebar
+
+        // Collapse sidebar on mobile by default
+        if (window.innerWidth <= 768) {
+            document.querySelector('.sidebar').classList.add('collapsed');
+        }
     </script>
 </body>
 </html>
