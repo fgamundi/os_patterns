@@ -6,34 +6,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Notebook PDF pattern generator for Spanish handmade bookbinding. Generates customizable notebook pages with various patterns (lined, dotted, squared, Cornell, isometric, hexagonal) following Spanish industry standards.
 
-**Three implementations:**
-- `generate_patterns.py` - Original simple CLI script
-- `generate.py` - Terminal UI (TUI) using Textual library
-- `index.html` - Self-contained web app (recommended)
+Self-contained web application in `index.html` - no dependencies required, runs entirely in the browser.
 
-## Running the Applications
+## Running the Application
 
-**Web app (recommended):**
 ```bash
-# Open in browser - no dependencies required
+# Open in browser - no dependencies or installation required
 open index.html
 ```
 
-**Python TUI:**
-```bash
-# Install dependencies
-python3 -m venv venv
-source venv/bin/activate  # On macOS/Linux
-pip install -r requirements.txt
-
-# Run TUI
-python3 generate.py
-```
-
-**Original CLI:**
-```bash
-python3 generate_patterns.py
-```
+Or simply double-click `index.html` to open in your default browser.
 
 ## Architecture
 
@@ -57,20 +39,7 @@ Single-file, self-contained web application with no backend dependencies.
 - `PREVIEW_MAX_HEIGHT` - Canvas preview height limit (280px)
 - `PREVIEW_SCALE` - Pixels per mm for preview (1.5)
 
-### Python TUI (`generate.py`)
-Terminal UI using Textual framework with `OptionList` widgets.
-
-**Known issues:**
-- Rendering problems in iTerm2 with some Textual widgets
-- `ListView` with custom `ListItem` subclasses didn't render properly
-- Switched to `OptionList` with `Option` objects for better compatibility
-
-**Configuration:**
-- `CONFIG_SCHEMA` - Complete schema with all options, labels, descriptions
-- Spanish defaults: A5 page, 5mm cuadrícula, 8mm pauta, 75% gray
-
-### PDF Generation
-Both Python and JavaScript use similar algorithms for pattern generation:
+## PDF Generation
 
 **Imposition/Pages per sheet:**
 - 1 page/sheet - Single page, no folding
@@ -100,19 +69,16 @@ Default values follow Spanish handmade notebook conventions:
 
 When adding new patterns or options:
 
-1. **Web app:** Update both PDF generation AND preview rendering
+1. Update both PDF generation AND preview rendering
    - Add pattern drawer function (e.g., `drawMyPattern()`)
    - Add preview renderer (in `drawPreviewPattern()` switch)
    - Update HTML `<select>` with new option
 
-2. **Python TUI:** Update `CONFIG_SCHEMA` and add pattern function
+2. Keep margin calculations consistent: subtract margins from drawable area
 
-3. Keep margin calculations consistent: subtract margins from drawable area
-
-4. Use proper units:
-   - Python: ReportLab uses points, convert with `* mm`
-   - JavaScript: jsPDF uses mm directly
-   - Canvas preview: scale with `spacing * scale`
+3. Use proper units:
+   - jsPDF uses mm directly
+   - Canvas preview: scale with `spacing * PREVIEW_SCALE`
 
 ## Fold Lines
 
