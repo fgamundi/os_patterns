@@ -762,24 +762,33 @@
 
         function drawHexagonal(doc, x, y, width, height, config) {
             const size = config.spacing;
-            const margin = config.margin_left;
+            const mt = config.margin_top;
+            const mb = config.margin_bottom;
+            const ml = config.margin_left;
+            const mr = config.margin_right;
 
             doc.setDrawColor(...getGrayColor(config.line_gray));
             doc.setLineWidth(config.line_weight * 0.352778);
 
-            const hexWidth = size * 2;
-            const hexHeight = size * Math.sqrt(3);
+            // For pointy-top hexagons (rotated by -30°)
+            const hexWidth = size * Math.sqrt(3);  // flat-to-flat width (horizontal)
+            const hexHeight = 2 * size;             // point-to-point height (vertical)
+
+            // Honeycomb tiling: hexagons touch edge-to-edge
+            const horizontalSpacing = hexWidth;       // center-to-center horizontal
+            const verticalSpacing = hexHeight * 0.75; // center-to-center vertical (3/4 of height)
+            const rowOffset = hexWidth * 0.5;         // horizontal shift for odd rows
 
             let row = 0;
-            let hexY = y + margin + size;
-            while (hexY < y + height - margin - size) {
-                const offset = (row % 2) ? hexWidth * 0.75 : 0;
-                let hexX = x + margin + size + offset;
-                while (hexX < x + width - margin - size) {
+            let hexY = y + mt + size;
+            while (hexY < y + height - mb - size) {
+                const offset = (row % 2) ? rowOffset : 0;
+                let hexX = x + ml + hexWidth / 2 + offset;
+                while (hexX < x + width - mr - hexWidth / 2) {
                     drawHexagon(doc, hexX, hexY, size);
-                    hexX += hexWidth * 1.5;
+                    hexX += horizontalSpacing;
                 }
-                hexY += hexHeight / 2;
+                hexY += verticalSpacing;
                 row++;
             }
         }
@@ -1147,14 +1156,21 @@
             }
 
             if (pattern === 'hexagonal') {
-                const size = spacing / 2;
-                const hexWidth = size * 2;
-                const hexHeight = size * Math.sqrt(3);
+                const size = spacing / scale;  // Use actual spacing value from config
+
+                // For pointy-top hexagons (rotated by -30°)
+                const hexWidth = size * Math.sqrt(3);   // flat-to-flat width (horizontal)
+                const hexHeight = 2 * size;              // point-to-point height (vertical)
+
+                // Honeycomb tiling: hexagons touch edge-to-edge
+                const horizontalSpacing = hexWidth;       // center-to-center horizontal
+                const verticalSpacing = hexHeight * 0.75; // center-to-center vertical (3/4 of height)
+                const rowOffset = hexWidth * 0.5;         // horizontal shift for odd rows
 
                 let row = 0;
-                for (let hy = top + size; hy < bottom - size; hy += hexHeight / 2) {
-                    const offset = (row % 2) ? hexWidth * 0.75 : 0;
-                    for (let hx = left + size + offset; hx < right - size; hx += hexWidth * 1.5) {
+                for (let hy = top + size; hy < bottom - size; hy += verticalSpacing) {
+                    const offset = (row % 2) ? rowOffset : 0;
+                    for (let hx = left + hexWidth / 2 + offset; hx < right - hexWidth / 2; hx += horizontalSpacing) {
                         drawPreviewHexagon(ctx, hx, hy, size);
                     }
                     row++;
