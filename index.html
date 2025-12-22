@@ -357,23 +357,23 @@
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div class="form-group">
                         <label for="margin_top">Superior</label>
-                        <input type="number" id="margin_top" value="10" min="0" max="50" step="1" onchange="validateMargin(this)">
-                        <div class="input-hint">0-50 mm</div>
+                        <input type="number" id="margin_top" value="10" min="0.1" max="50" step="0.1" onchange="validateMargin(this)" oninput="validateMargin(this)">
+                        <div class="input-hint">0.1-50 mm</div>
                     </div>
                     <div class="form-group">
                         <label for="margin_bottom">Inferior</label>
-                        <input type="number" id="margin_bottom" value="10" min="0" max="50" step="1" onchange="validateMargin(this)">
-                        <div class="input-hint">0-50 mm</div>
+                        <input type="number" id="margin_bottom" value="10" min="0.1" max="50" step="0.1" onchange="validateMargin(this)" oninput="validateMargin(this)">
+                        <div class="input-hint">0.1-50 mm</div>
                     </div>
                     <div class="form-group">
                         <label for="margin_left">Izquierdo</label>
-                        <input type="number" id="margin_left" value="15" min="0" max="50" step="1" onchange="validateMargin(this)">
-                        <div class="input-hint">0-50 mm</div>
+                        <input type="number" id="margin_left" value="15" min="0.1" max="50" step="0.1" onchange="validateMargin(this)" oninput="validateMargin(this)">
+                        <div class="input-hint">0.1-50 mm</div>
                     </div>
                     <div class="form-group">
                         <label for="margin_right">Derecho</label>
-                        <input type="number" id="margin_right" value="10" min="0" max="50" step="1" onchange="validateMargin(this)">
-                        <div class="input-hint">0-50 mm</div>
+                        <input type="number" id="margin_right" value="10" min="0.1" max="50" step="0.1" onchange="validateMargin(this)" oninput="validateMargin(this)">
+                        <div class="input-hint">0.1-50 mm</div>
                     </div>
                 </div>
             </div>
@@ -468,15 +468,20 @@
         }
 
         function getConfig() {
+            const getMargin = (id, defaultValue) => {
+                const value = parseFloat(document.getElementById(id).value);
+                return isNaN(value) ? defaultValue : Math.max(0.1, value);
+            };
+
             return {
                 page_size: document.getElementById('page_size').value,
                 orientation: document.getElementById('orientation').value,
                 pattern: document.getElementById('pattern').value,
                 spacing: parseFloat(document.getElementById('spacing').value),
-                margin_top: parseFloat(document.getElementById('margin_top').value) || 10,
-                margin_bottom: parseFloat(document.getElementById('margin_bottom').value) || 10,
-                margin_left: parseFloat(document.getElementById('margin_left').value) || 15,
-                margin_right: parseFloat(document.getElementById('margin_right').value) || 10,
+                margin_top: getMargin('margin_top', 10),
+                margin_bottom: getMargin('margin_bottom', 10),
+                margin_left: getMargin('margin_left', 15),
+                margin_right: getMargin('margin_right', 10),
                 line_gray: parseInt(document.getElementById('line_gray').value),
                 line_weight: parseFloat(document.getElementById('line_weight').value),
                 pages: parseInt(document.getElementById('pages').value),
@@ -519,7 +524,7 @@
                 input.classList.remove('invalid');
                 const hint = input.nextElementSibling;
                 hint.classList.remove('error');
-                hint.textContent = '0-50 mm';
+                hint.textContent = '0.1-50 mm';
             });
 
             toggleFoldLinesOption();
@@ -540,18 +545,32 @@
             doc.setDrawColor(...getGrayColor(config.line_gray));
             doc.setLineWidth(config.line_weight * 0.352778);
 
-            let startY = y + mt + spacing;
+            // Calculate drawable height
+            const drawableHeight = height - mt - mb;
+
+            let headerOffset = 0;
             if (config.header_line === 'yes') {
                 doc.setLineWidth(config.line_weight * 0.352778 * 1.5);
                 doc.line(x + ml, y + mt, x + width - mr, y + mt);
                 doc.setLineWidth(config.line_weight * 0.352778);
-                startY = y + mt + spacing * 2;
+                headerOffset = spacing;
             }
 
-            let lineY = startY;
-            while (lineY < y + height - mb) {
+            // Calculate number of complete lines that fit
+            const availableHeight = drawableHeight - headerOffset;
+            const numLines = Math.floor(availableHeight / spacing);
+
+            // Calculate actual lines height
+            const linesHeight = numLines * spacing;
+
+            // Center vertically
+            const offsetY = (availableHeight - linesHeight) / 2;
+            const startY = y + mt + headerOffset + offsetY;
+
+            // Draw lines
+            for (let i = 1; i <= numLines; i++) {
+                const lineY = startY + i * spacing;
                 doc.line(x + ml, lineY, x + width - mr, lineY);
-                lineY += spacing;
             }
         }
 
@@ -565,14 +584,32 @@
 
             doc.setFillColor(...getGrayColor(config.line_gray));
 
-            let dotY = y + mt;
-            while (dotY < y + height - mb) {
-                let dotX = x + ml;
-                while (dotX < x + width - mr) {
+            // Calculate drawable area
+            const drawableWidth = width - ml - mr;
+            const drawableHeight = height - mt - mb;
+
+            // Calculate number of complete dots that fit
+            const numDotsX = Math.floor(drawableWidth / spacing) + 1;
+            const numDotsY = Math.floor(drawableHeight / spacing) + 1;
+
+            // Calculate actual grid size
+            const gridWidth = (numDotsX - 1) * spacing;
+            const gridHeight = (numDotsY - 1) * spacing;
+
+            // Center the grid in the drawable area
+            const offsetX = (drawableWidth - gridWidth) / 2;
+            const offsetY = (drawableHeight - gridHeight) / 2;
+
+            const startX = x + ml + offsetX;
+            const startY = y + mt + offsetY;
+
+            // Draw dots
+            for (let i = 0; i < numDotsY; i++) {
+                for (let j = 0; j < numDotsX; j++) {
+                    const dotX = startX + j * spacing;
+                    const dotY = startY + i * spacing;
                     doc.circle(dotX, dotY, dotRadius, 'F');
-                    dotX += spacing;
                 }
-                dotY += spacing;
             }
         }
 
@@ -586,21 +623,37 @@
             doc.setDrawColor(...getGrayColor(config.line_gray));
             doc.setLineWidth(config.line_weight * 0.352778);
 
-            const left = x + ml;
-            const right = x + width - mr;
-            const top = y + mt;
-            const bottom = y + height - mb;
+            // Calculate drawable area
+            const drawableWidth = width - ml - mr;
+            const drawableHeight = height - mt - mb;
 
-            let lineX = left;
-            while (lineX <= right) {
+            // Calculate number of complete squares that fit
+            const numSquaresX = Math.floor(drawableWidth / spacing);
+            const numSquaresY = Math.floor(drawableHeight / spacing);
+
+            // Calculate actual grid size
+            const gridWidth = numSquaresX * spacing;
+            const gridHeight = numSquaresY * spacing;
+
+            // Center the grid in the drawable area
+            const offsetX = (drawableWidth - gridWidth) / 2;
+            const offsetY = (drawableHeight - gridHeight) / 2;
+
+            const left = x + ml + offsetX;
+            const right = left + gridWidth;
+            const top = y + mt + offsetY;
+            const bottom = top + gridHeight;
+
+            // Draw vertical lines
+            for (let i = 0; i <= numSquaresX; i++) {
+                const lineX = left + i * spacing;
                 doc.line(lineX, top, lineX, bottom);
-                lineX += spacing;
             }
 
-            let lineY = top;
-            while (lineY <= bottom) {
+            // Draw horizontal lines
+            for (let i = 0; i <= numSquaresY; i++) {
+                const lineY = top + i * spacing;
                 doc.line(left, lineY, right, lineY);
-                lineY += spacing;
             }
         }
 
@@ -931,7 +984,10 @@
             }
 
             if (pattern === 'lined') {
-                let startY = top + spacing;
+                // Calculate drawable height
+                const drawableHeight = height - mt - mb;
+
+                let headerOffset = 0;
                 if (config.header_line === 'yes') {
                     ctx.lineWidth = lineWidth * 1.5;
                     ctx.beginPath();
@@ -939,11 +995,23 @@
                     ctx.lineTo(right, top);
                     ctx.stroke();
                     ctx.lineWidth = lineWidth;
-                    startY = top + spacing * 2;
+                    headerOffset = spacing;
                 }
 
+                // Calculate number of complete lines
+                const availableHeight = drawableHeight - headerOffset;
+                const numLines = Math.floor(availableHeight / spacing);
+
+                // Calculate actual lines height
+                const linesHeight = numLines * spacing;
+
+                // Center vertically
+                const offsetY = (availableHeight - linesHeight) / 2;
+                const startY = top + headerOffset + offsetY;
+
                 ctx.beginPath();
-                for (let ly = startY; ly < bottom; ly += spacing) {
+                for (let i = 1; i <= numLines; i++) {
+                    const ly = startY + i * spacing;
                     ctx.moveTo(left, ly);
                     ctx.lineTo(right, ly);
                 }
@@ -952,8 +1020,30 @@
 
             if (pattern === 'dotted') {
                 const dotRadius = Math.max(0.5, lineWidth * 0.8);
-                for (let dy = top; dy < bottom; dy += spacing) {
-                    for (let dx = left; dx < right; dx += spacing) {
+
+                // Calculate drawable area
+                const drawableWidth = width - ml - mr;
+                const drawableHeight = height - mb - mt;
+
+                // Calculate number of complete dots
+                const numDotsX = Math.floor(drawableWidth / spacing) + 1;
+                const numDotsY = Math.floor(drawableHeight / spacing) + 1;
+
+                // Calculate actual grid size
+                const gridWidth = (numDotsX - 1) * spacing;
+                const gridHeight = (numDotsY - 1) * spacing;
+
+                // Center the grid
+                const offsetX = (drawableWidth - gridWidth) / 2;
+                const offsetY = (drawableHeight - gridHeight) / 2;
+
+                const startX = left + offsetX;
+                const startY = top + offsetY;
+
+                for (let i = 0; i < numDotsY; i++) {
+                    for (let j = 0; j < numDotsX; j++) {
+                        const dx = startX + j * spacing;
+                        const dy = startY + i * spacing;
                         ctx.beginPath();
                         ctx.arc(dx, dy, dotRadius, 0, Math.PI * 2);
                         ctx.fill();
@@ -962,16 +1052,39 @@
             }
 
             if (pattern === 'squared') {
+                // Calculate drawable area
+                const drawableWidth = width - ml - mr;
+                const drawableHeight = height - mb - mt;
+
+                // Calculate number of complete squares
+                const numSquaresX = Math.floor(drawableWidth / spacing);
+                const numSquaresY = Math.floor(drawableHeight / spacing);
+
+                // Calculate actual grid size
+                const gridWidth = numSquaresX * spacing;
+                const gridHeight = numSquaresY * spacing;
+
+                // Center the grid
+                const offsetX = (drawableWidth - gridWidth) / 2;
+                const offsetY = (drawableHeight - gridHeight) / 2;
+
+                const gridLeft = left + offsetX;
+                const gridRight = gridLeft + gridWidth;
+                const gridTop = top + offsetY;
+                const gridBottom = gridTop + gridHeight;
+
                 ctx.beginPath();
                 // Vertical lines
-                for (let lx = left; lx <= right; lx += spacing) {
-                    ctx.moveTo(lx, top);
-                    ctx.lineTo(lx, bottom);
+                for (let i = 0; i <= numSquaresX; i++) {
+                    const lx = gridLeft + i * spacing;
+                    ctx.moveTo(lx, gridTop);
+                    ctx.lineTo(lx, gridBottom);
                 }
                 // Horizontal lines
-                for (let ly = top; ly <= bottom; ly += spacing) {
-                    ctx.moveTo(left, ly);
-                    ctx.lineTo(right, ly);
+                for (let i = 0; i <= numSquaresY; i++) {
+                    const ly = gridTop + i * spacing;
+                    ctx.moveTo(gridLeft, ly);
+                    ctx.lineTo(gridRight, ly);
                 }
                 ctx.stroke();
             }
